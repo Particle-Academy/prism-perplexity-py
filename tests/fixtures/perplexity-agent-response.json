@@ -12,6 +12,7 @@
         {
             "id": "agent-0001",
             "title": "a completed run with one citation",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_01",
@@ -114,6 +115,7 @@
         {
             "id": "agent-0002",
             "title": "a queued run is NOT finished",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_02",
@@ -174,6 +176,7 @@
         {
             "id": "agent-0003",
             "title": "an in-progress run is NOT finished",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_03",
@@ -234,6 +237,7 @@
         {
             "id": "agent-0004",
             "title": "a failed run is finished, and carries its error as a VALUE",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_04",
@@ -311,6 +315,7 @@
         {
             "id": "agent-0005",
             "title": "a cancelled run is finished",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_05",
@@ -371,6 +376,7 @@
         {
             "id": "agent-0006",
             "title": "an incomplete run is finished",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_06",
@@ -431,6 +437,7 @@
         {
             "id": "agent-0007",
             "title": "a status none of the three languages knows",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_07",
@@ -465,6 +472,7 @@
         {
             "id": "agent-0008",
             "title": "a response with no id",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "status": "completed",
@@ -498,6 +506,7 @@
         {
             "id": "agent-0009",
             "title": "a response whose id is the empty string",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "",
@@ -532,6 +541,7 @@
         {
             "id": "agent-0010",
             "title": "an HTTP 400 that names its error",
+            "since": "0.1.0",
             "http_status": 400,
             "body": {
                 "error": {
@@ -566,6 +576,7 @@
         {
             "id": "agent-0011",
             "title": "an HTTP 500 with no error object at all",
+            "since": "0.1.0",
             "http_status": 500,
             "body": {
                 "detail": "internal"
@@ -597,6 +608,7 @@
         {
             "id": "agent-0012",
             "title": "a 200 whose body is a JSON array, not an object",
+            "since": "0.1.0",
             "http_status": 200,
             "body": [
                 "not",
@@ -631,6 +643,7 @@
         {
             "id": "agent-0013",
             "title": "output carrying an element that is not an object",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_13",
@@ -717,6 +730,7 @@
         {
             "id": "agent-0014",
             "title": "citations spread across two output items and two content parts",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_14",
@@ -852,6 +866,7 @@
         {
             "id": "agent-0015",
             "title": "an annotation that is not an object",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_15",
@@ -938,6 +953,7 @@
         {
             "id": "agent-0016",
             "title": "created_at as a numeric STRING",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_16",
@@ -1000,6 +1016,7 @@
         {
             "id": "agent-0017",
             "title": "a completed run with no output and no sources",
+            "since": "0.1.0",
             "http_status": 200,
             "body": {
                 "id": "resp_17",
