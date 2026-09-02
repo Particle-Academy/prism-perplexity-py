@@ -1,0 +1,1061 @@
+{
+    "suite": "perplexity-agent-response",
+    "schema_version": 1,
+    "corpus_version": "0.1.0",
+    "generated_by": "prism-parity:tools/generate-agent-responses.php for php; the ports' own runners for ts and py. Every row is execution output from the real client against a stubbed transport — a hand-authored parse result would assert the author's model of the parser.",
+    "scope": "Parsing ONE Agent API response into the value the caller acts on: whether the run is finished, what its id and status are, which citations it carries, and whether the client refuses the body outright. The request side is not covered here, and neither is the polling loop that calls this in a cycle.",
+    "inputs": {
+        "http_status": "The HTTP status the transport returns.",
+        "body": "The raw response body, verbatim. This is UNTRUSTED input: it is whatever the provider sent, and the malformed rows are not hypothetical shapes but the ones a parser is most likely to disagree about."
+    },
+    "cases": [
+        {
+            "id": "agent-0001",
+            "title": "a completed run with one citation",
+            "http_status": 200,
+            "body": {
+                "id": "resp_01",
+                "status": "completed",
+                "model": "sonar-pro",
+                "created_at": 1730000000,
+                "usage": {
+                    "input_tokens": 12,
+                    "output_tokens": 40
+                },
+                "output": [
+                    {
+                        "content": [
+                            {
+                                "text": "Paris is the capital.",
+                                "annotations": [
+                                    {
+                                        "url": "https://example.test/a",
+                                        "title": "A"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notes": "The control. If this row disagrees the parse is wrong at the top and every other row is noise.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_01",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": "sonar-pro",
+                    "created_at": 1730000000,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/a",
+                            "title": "A"
+                        }
+                    ],
+                    "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 40
+                    },
+                    "error": null,
+                    "text": "Paris is the capital."
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_01",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": "sonar-pro",
+                    "created_at": 1730000000,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/a",
+                            "title": "A"
+                        }
+                    ],
+                    "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 40
+                    },
+                    "error": null,
+                    "text": "Paris is the capital."
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_01",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": "sonar-pro",
+                    "created_at": 1730000000,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/a",
+                            "title": "A"
+                        }
+                    ],
+                    "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 40
+                    },
+                    "error": null,
+                    "text": "Paris is the capital."
+                }
+            },
+            "agrees": true,
+            "disagrees_on": [],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0002",
+            "title": "a queued run is NOT finished",
+            "http_status": 200,
+            "body": {
+                "id": "resp_02",
+                "status": "queued",
+                "output": []
+            },
+            "notes": "The value the polling loop turns on. A language that called this terminal would return an empty answer as though it were the final one.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_02",
+                    "status": "queued",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_02",
+                    "status": "queued",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_02",
+                    "status": "queued",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0003",
+            "title": "an in-progress run is NOT finished",
+            "http_status": 200,
+            "body": {
+                "id": "resp_03",
+                "status": "in_progress",
+                "output": []
+            },
+            "notes": "The other non-terminal state, and the one a run spends most of its life in.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_03",
+                    "status": "in_progress",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_03",
+                    "status": "in_progress",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_03",
+                    "status": "in_progress",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0004",
+            "title": "a failed run is finished, and carries its error as a VALUE",
+            "http_status": 200,
+            "body": {
+                "id": "resp_04",
+                "status": "failed",
+                "error": {
+                    "message": "the model refused",
+                    "code": "refusal",
+                    "type": "model_error"
+                },
+                "output": []
+            },
+            "notes": "A 200 whose body reports a failed run. The run finished; it just finished badly. Turning this into an exception would lose the id, the usage and the partial output the caller may still want.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_04",
+                    "status": "failed",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": {
+                        "message": "the model refused",
+                        "code": "refusal",
+                        "type": "model_error"
+                    },
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_04",
+                    "status": "failed",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": {
+                        "message": "the model refused",
+                        "code": "refusal",
+                        "type": "model_error"
+                    },
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_04",
+                    "status": "failed",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": {
+                        "message": "the model refused",
+                        "code": "refusal",
+                        "type": "model_error"
+                    },
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0005",
+            "title": "a cancelled run is finished",
+            "http_status": 200,
+            "body": {
+                "id": "resp_05",
+                "status": "cancelled",
+                "output": []
+            },
+            "notes": "Terminal. A poller that kept waiting on this would spin until its attempt budget ran out and then report a timeout for a run that ended promptly.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_05",
+                    "status": "cancelled",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_05",
+                    "status": "cancelled",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_05",
+                    "status": "cancelled",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0006",
+            "title": "an incomplete run is finished",
+            "http_status": 200,
+            "body": {
+                "id": "resp_06",
+                "status": "incomplete",
+                "output": []
+            },
+            "notes": "The least obvious terminal state — it reads like a synonym for in_progress and is not one.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_06",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_06",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_06",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0007",
+            "title": "a status none of the three languages knows",
+            "http_status": 200,
+            "body": {
+                "id": "resp_07",
+                "status": "running",
+                "output": []
+            },
+            "notes": "Perplexity adding a state is a WHEN, not an if. Refusing is the safe answer — a parser that guessed terminal would truncate a live run, and one that guessed non-terminal would poll a finished one to timeout. What matters cross-language is that all three refuse it the SAME way, because the caller switches on the refusal.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0008",
+            "title": "a response with no id",
+            "http_status": 200,
+            "body": {
+                "status": "completed",
+                "output": []
+            },
+            "notes": "The id is the handle for retrieve and cancel. A response without one cannot be followed up, so accepting it hands the caller something it cannot act on.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0009",
+            "title": "a response whose id is the empty string",
+            "http_status": 200,
+            "body": {
+                "id": "",
+                "status": "completed",
+                "output": []
+            },
+            "notes": "Falsy in all three languages and present in none of the obvious ways. An empty id passed to retrieve builds a URL for a different endpoint entirely.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0010",
+            "title": "an HTTP 400 that names its error",
+            "http_status": 400,
+            "body": {
+                "error": {
+                    "message": "unknown field: search_mode",
+                    "type": "invalid_request_error"
+                }
+            },
+            "notes": "The shape prism#31 produced in production. The provider's own error type has to survive into the refusal, or a consumer cannot tell a bad request from a rate limit.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_request_error"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "invalid_request_error"
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "invalid_request_error"
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0011",
+            "title": "an HTTP 500 with no error object at all",
+            "http_status": 500,
+            "body": {
+                "detail": "internal"
+            },
+            "notes": "A failure the provider did not describe. The fallback identifier is the whole contract here, and it is exactly the sort of string three languages invent separately.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "agent_request_error"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "agent_request_error"
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "agent_request_error"
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0012",
+            "title": "a 200 whose body is a JSON array, not an object",
+            "http_status": 200,
+            "body": [
+                "not",
+                "an",
+                "object"
+            ],
+            "notes": "A proxy, a captive portal or a misrouted endpoint returns this. Indexing it as a map yields nulls rather than an error, so a parser that does not check the shape reports a missing status instead of an unreadable body.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "unreadable_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "unreadable_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0013",
+            "title": "output carrying an element that is not an object",
+            "http_status": 200,
+            "body": {
+                "id": "resp_13",
+                "status": "completed",
+                "output": [
+                    "a bare string",
+                    {
+                        "content": [
+                            {
+                                "text": "kept",
+                                "annotations": [
+                                    {
+                                        "url": "https://example.test/b"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notes": "Untrusted structure inside a well-formed envelope. The bare string must not become an output item, and it must not stop the sibling that follows it from being read.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_13",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/b"
+                        }
+                    ],
+                    "usage": [],
+                    "error": null,
+                    "text": "kept"
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_13",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/b"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "kept"
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_13",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/b"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "kept"
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0014",
+            "title": "citations spread across two output items and two content parts",
+            "http_status": 200,
+            "body": {
+                "id": "resp_14",
+                "status": "completed",
+                "output": [
+                    {
+                        "content": [
+                            {
+                                "text": "one",
+                                "annotations": [
+                                    {
+                                        "url": "https://example.test/1"
+                                    },
+                                    {
+                                        "url": "https://example.test/2"
+                                    }
+                                ]
+                            },
+                            {
+                                "text": "two",
+                                "annotations": [
+                                    {
+                                        "url": "https://example.test/3"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "content": [
+                            {
+                                "text": "three",
+                                "annotations": [
+                                    {
+                                        "url": "https://example.test/4"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notes": "Citations are flattened out of a three-level nest, and ORDER is the whole value: a UI numbers them and the answer text refers to them by that number. A language that flattened depth-first differently renumbers every citation in the answer.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_14",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 2,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/1"
+                        },
+                        {
+                            "url": "https://example.test/2"
+                        },
+                        {
+                            "url": "https://example.test/3"
+                        },
+                        {
+                            "url": "https://example.test/4"
+                        }
+                    ],
+                    "usage": [],
+                    "error": null,
+                    "text": "one\ntwo\nthree"
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_14",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 2,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/1"
+                        },
+                        {
+                            "url": "https://example.test/2"
+                        },
+                        {
+                            "url": "https://example.test/3"
+                        },
+                        {
+                            "url": "https://example.test/4"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "one\ntwo\nthree"
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_14",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 2,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/1"
+                        },
+                        {
+                            "url": "https://example.test/2"
+                        },
+                        {
+                            "url": "https://example.test/3"
+                        },
+                        {
+                            "url": "https://example.test/4"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "one\ntwo\nthree"
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0015",
+            "title": "an annotation that is not an object",
+            "http_status": 200,
+            "body": {
+                "id": "resp_15",
+                "status": "completed",
+                "output": [
+                    {
+                        "content": [
+                            {
+                                "text": "x",
+                                "annotations": [
+                                    "https://example.test/bare",
+                                    {
+                                        "url": "https://example.test/ok"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "notes": "A citation list is rendered as links. A bare string surviving into it is a value the UI will try to read fields off, and the one that follows it must still arrive.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_15",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/ok"
+                        }
+                    ],
+                    "usage": [],
+                    "error": null,
+                    "text": "x"
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_15",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/ok"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "x"
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_15",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 1,
+                    "annotations": [
+                        {
+                            "url": "https://example.test/ok"
+                        }
+                    ],
+                    "usage": {},
+                    "error": null,
+                    "text": "x"
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0016",
+            "title": "created_at as a numeric STRING",
+            "http_status": 200,
+            "body": {
+                "id": "resp_16",
+                "status": "completed",
+                "created_at": "1730000000",
+                "output": []
+            },
+            "notes": "JSON has one number type and providers still send timestamps as strings. Whether this is read, refused or silently nulled is a per-language coercion habit, and the three habits differ more than anything else in this file.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_16",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": 1730000000,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_16",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_16",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "created_at",
+                "usage"
+            ],
+            "ports_agree": true
+        },
+        {
+            "id": "agent-0017",
+            "title": "a completed run with no output and no sources",
+            "http_status": 200,
+            "body": {
+                "id": "resp_17",
+                "status": "completed",
+                "output": []
+            },
+            "notes": "A legitimate answer, not a failure — the package's own docs say an empty source list on a completed run is normal. Pinned so no language starts treating emptiness as an error.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_17",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_17",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_17",
+                    "status": "completed",
+                    "terminal": true,
+                    "successful": true,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": ""
+                }
+            },
+            "agrees": false,
+            "disagrees_on": [
+                "usage"
+            ],
+            "ports_agree": true
+        }
+    ]
+}
