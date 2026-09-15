@@ -65,8 +65,16 @@ Every failure is a `PerplexityError` with a stable `code`:
 
 ## Parity
 
-prism-parity's `perplexity-agent-response` corpus pins how Agent API responses
-are read against the PHP reference and the TypeScript port.
+prism-parity's `perplexity-agent-response` corpus compares how Agent API
+responses are read. This port and the TypeScript port agree on every case. The
+PHP reference differs on most of them:
+
+- an empty `usage` is a list in PHP and a dict here;
+- a JSON array body is `invalid_response` in PHP and `unreadable_response` here;
+- a numeric-string `created_at` becomes a number in PHP and `None` here;
+- a refusal carries no machine-readable code in PHP.
+
+Status handling, polling and citations agree in all three.
 
 ## License
 
