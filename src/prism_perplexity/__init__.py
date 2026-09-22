@@ -336,7 +336,7 @@ class AgentClient:
         )
 
     def wait(
-        self, run_id: str, max_attempts: int = 60, interval_seconds: float = 1.0
+        self, run_id: str, max_attempts: int = 300, interval_seconds: float = 1.0
     ) -> AgentResponse:
         """Poll until the run reaches a terminal state.
 
@@ -344,6 +344,19 @@ class AgentClient:
         a caller handed back a ``queued`` would have to check the status again
         to know the wait failed, and the ones who forget treat an unfinished run
         as an empty answer.
+
+        THE CEILING IS FIVE MINUTES BECAUSE ONE MINUTE FIRES ON THE NORMAL CASE.
+        It was 60 attempts, and the reference package measured a *routine*
+        deep-research call at 57-59 seconds (particle-academy/prism-perplexity#2)
+        -- so a caller following this package's own README example, which takes
+        the default, was within two seconds of AGENT_WAIT_TIMED_OUT on a call
+        that was working perfectly. The endpoint's entire purpose is to run for
+        minutes; a default that assumes otherwise reports a failure that did not
+        happen, which is worse than waiting.
+
+        Still a default rather than a fixed value: a caller who wants to give up
+        sooner passes a smaller ``max_attempts``, and one polling a slower model
+        passes a larger one.
         """
         if max_attempts < 1 or interval_seconds < 0:
             raise PerplexityError(

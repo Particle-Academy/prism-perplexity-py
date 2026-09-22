@@ -52,8 +52,10 @@ and embeds each with the others in view.
 - `create(input, options)` starts a run in the background by default, so no
   request is held open for minutes.
 - `retrieve(run_id)` and `cancel(run_id)` do what they say.
-- `wait(run_id, max_attempts=60, interval_seconds=1.0)` polls until the run
-  finishes, and raises `agent_wait_timed_out` if it does not.
+- `wait(run_id, max_attempts=300, interval_seconds=1.0)` polls until the run
+  finishes, and raises `agent_wait_timed_out` if it does not. Five minutes,
+  because the reference measured a *routine* deep-research call at 57-59
+  seconds — a one-minute ceiling reports a failure that did not happen.
 - `AgentResponse.text()` joins the text parts of the output.
   `is_successful()` is true only for a completed run.
 
