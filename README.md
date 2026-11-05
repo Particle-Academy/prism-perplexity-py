@@ -51,13 +51,23 @@ and embeds each with the others in view.
 
 - `create(input, options)` starts a run in the background by default, so no
   request is held open for minutes.
-- `retrieve(run_id)` and `cancel(run_id)` do what they say.
+- `retrieve(run_id)` gets a snapshot; `cancel(run_id)` acknowledges a request.
+  `cancelling` is neither terminal nor successful.
 - `wait(run_id, max_attempts=300, interval_seconds=1.0)` polls until the run
   finishes, and raises `agent_wait_timed_out` if it does not. Five minutes,
   because the reference measured a *routine* deep-research call at 57-59
   seconds — a one-minute ceiling reports a failure that did not happen.
 - `AgentResponse.text()` joins the text parts of the output.
   `is_successful()` is true only for a completed run.
+- `incomplete_reason()` returns the string `incomplete_details.reason`, including
+  an empty string, or `None` when absent or malformed.
+
+A cancellation acknowledgement's `response_id` (or legacy `id`, only when
+`response_id` is absent) must match the requested ID exactly. A malformed or
+mismatched acknowledgement raises `invalid_response`; cancellation state is
+uncertain, so call `retrieve(run_id)` to check it. The client does not retry
+cancellation automatically. `create()` and `retrieve()` still use their own
+`id` field, and `raw` retains the provider body.
 
 ## Errors
 
@@ -68,7 +78,8 @@ Every failure is a `PerplexityError` with a stable `code`:
 ## Parity
 
 prism-parity's `perplexity-agent-response` corpus compares how Agent API
-responses are read. This port and the TypeScript port agree on every case. The
+responses are read. This port and the TypeScript port agree on all forty-five
+cases; the original seventeen rows are unchanged. The
 PHP reference differs on most of them:
 
 - an empty `usage` is a list in PHP and a dict here;

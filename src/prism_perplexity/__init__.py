@@ -255,6 +255,7 @@ class AgentStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     INCOMPLETE = "incomplete"
+    CANCELLING = "cancelling"
     CANCELLED = "cancelled"
 
     def is_terminal(self) -> bool:
@@ -290,6 +291,10 @@ class AgentResponse:
 
     def is_successful(self) -> bool:
         return self.status is AgentStatus.COMPLETED
+
+    def incomplete_reason(self) -> str | None:
+        """Why the run stopped early, such as max_output_tokens; None when not provided."""
+        return _as_optional_str(_as_dict(self.raw.get("incomplete_details")).get("reason"))
 
     def text(self) -> str:
         """Every text part of the output, joined."""
@@ -332,7 +337,8 @@ class AgentClient:
 
     def cancel(self, run_id: str) -> AgentResponse:
         return self._map(
-            HttpRequest("POST", f"/v1/agent/{urllib.parse.quote(run_id, safe='')}/cancel")
+            HttpRequest("POST", f"/v1/agent/{urllib.parse.quote(run_id, safe='')}/cancel"),
+            cancellation_id=run_id,
         )
 
     def wait(
@@ -380,7 +386,7 @@ class AgentClient:
             f"The Perplexity agent run [{run_id}] did not finish within {max_attempts} attempt(s).",
         )
 
-    def _map(self, request: HttpRequest) -> AgentResponse:
+    def _map(self, request: HttpRequest, *, cancellation_id: str | None = None) -> AgentResponse:
         response = self._http(request)
         data = response.json
 
@@ -400,7 +406,13 @@ class AgentClient:
                 response.status,
             )
 
-        run_id = data.get("id")
+        # Cancel is an acknowledgement, not a full snapshot. Only an absent
+        # response_id permits the legacy id fallback; malformed values still fail.
+        run_id = (
+            data.get("response_id")
+            if cancellation_id is not None and "response_id" in data
+            else data.get("id")
+        )
         status: AgentStatus | None
         try:
             status = AgentStatus(data.get("status"))
@@ -411,6 +423,14 @@ class AgentClient:
             raise PerplexityError(
                 ErrorCode.INVALID_RESPONSE,
                 "The Agent API response is missing a recognized status or response id.",
+                status=response.status,
+            )
+
+        if cancellation_id is not None and run_id != cancellation_id:
+            raise PerplexityError(
+                ErrorCode.INVALID_RESPONSE,
+                "The cancellation acknowledgement identifies a different run. Cancellation state is uncertain. "
+                "Use retrieve() with the requested ID to check its state.",
                 status=response.status,
             )
 
