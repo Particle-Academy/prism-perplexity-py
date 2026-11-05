@@ -1,12 +1,14 @@
 {
     "suite": "perplexity-agent-response",
     "schema_version": 1,
-    "corpus_version": "0.1.0",
+    "corpus_version": "0.1.17",
     "generated_by": "prism-parity:tools/generate-agent-responses.php for php; the ports' own runners for ts and py. Every row is execution output from the real client against a stubbed transport — a hand-authored parse result would assert the author's model of the parser.",
-    "scope": "Parsing ONE Agent API response into the value the caller acts on: whether the run is finished, what its id and status are, which citations it carries, and whether the client refuses the body outright. The request side is not covered here, and neither is the polling loop that calls this in a cycle.",
+    "scope": "Parse one Agent API response through retrieve (legacy default), cancel, or create. Cancellation-only response_id presence, exact requested-ID binding, cancelling classification and optional incomplete_details.reason projection are covered. Bounded polling is tested in each client package, not by this single-response corpus.",
     "inputs": {
         "http_status": "The HTTP status the transport returns.",
-        "body": "The raw response body, verbatim. This is UNTRUSTED input: it is whatever the provider sent, and the malformed rows are not hypothetical shapes but the ones a parser is most likely to disagree about."
+        "body": "The raw response body, verbatim. This is UNTRUSTED input: it is whatever the provider sent, and the malformed rows are not hypothetical shapes but the ones a parser is most likely to disagree about.",
+        "operation": "Optional retrieve, cancel, or create. Defaults to retrieve for the unchanged legacy rows; cancel uses the fixed requested ID resp_probe.",
+        "project_incomplete_reason": "Project the native incompleteReason()/incomplete_reason() result only when true; legacy projections remain unchanged."
     },
     "cases": [
         {
@@ -1073,6 +1075,1451 @@
                 "usage"
             ],
             "ports_agree": true
+        },
+        {
+            "id": "agent-0018",
+            "title": "documented-cancel-ack",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0019",
+            "title": "legacy-cancel-ack",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0020",
+            "title": "cancel-ack-response-id-precedence",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_probe",
+                "id": "resp_other",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0021",
+            "title": "present-malformed-response-id-0",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": null,
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0022",
+            "title": "present-malformed-response-id-1",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "",
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0023",
+            "title": "present-malformed-response-id-2",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": 42,
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0024",
+            "title": "present-malformed-response-id-3",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": false,
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0025",
+            "title": "present-malformed-response-id-4",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": [],
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0026",
+            "title": "present-malformed-response-id-5",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": {},
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0027",
+            "title": "cancel-missing-both-identifiers",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0028",
+            "title": "retrieve-does-not-alias-response-id",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_probe",
+                "status": "completed"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0029",
+            "title": "create-does-not-alias-response-id",
+            "since": "0.1.17",
+            "operation": "create",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_probe",
+                "status": "completed"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0030",
+            "title": "retrieve-tolerates-cancelling-without-provider-claim",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "A synthetic cancelling GET snapshot tests parser tolerance, not a claim that Perplexity emits this status on retrieve.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "cancelling",
+                    "terminal": false,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0031",
+            "title": "incomplete-reason-0",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": "max_output_tokens"
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "max_output_tokens"
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "max_output_tokens"
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "max_output_tokens"
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0032",
+            "title": "incomplete-reason-1",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": "future_reason"
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "future_reason"
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "future_reason"
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": "future_reason"
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0033",
+            "title": "incomplete-reason-2",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": ""
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": ""
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": ""
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": ""
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0034",
+            "title": "incomplete-reason-3",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": 42
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0035",
+            "title": "incomplete-reason-4",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": false
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0036",
+            "title": "incomplete-reason-5",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": []
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0037",
+            "title": "incomplete-reason-6",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": {
+                    "reason": {}
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0038",
+            "title": "incomplete-details-absent",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0039",
+            "title": "incomplete-details-null",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": null
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0040",
+            "title": "incomplete-details-scalar",
+            "since": "0.1.17",
+            "operation": "retrieve",
+            "http_status": 200,
+            "body": {
+                "id": "resp_probe",
+                "status": "incomplete",
+                "incomplete_details": "max_output_tokens"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Independent lifecycle or incomplete-reason input; raw payload and legacy G-29 through G-32 projections are retained.",
+            "parsed": {
+                "php": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": [],
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "ts": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                },
+                "py": {
+                    "refused": false,
+                    "id": "resp_probe",
+                    "status": "incomplete",
+                    "terminal": true,
+                    "successful": false,
+                    "model": null,
+                    "created_at": null,
+                    "output_count": 0,
+                    "annotations": [],
+                    "usage": {},
+                    "error": null,
+                    "text": "",
+                    "incomplete_reason": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "usage"
+            ]
+        },
+        {
+            "id": "agent-0041",
+            "title": "http-cancel-failure",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 400,
+            "body": {
+                "error": {
+                    "type": "already_terminal",
+                    "message": "Already done"
+                }
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "already_terminal"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "already_terminal"
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "provider_error",
+                    "error_type": "already_terminal"
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code"
+            ]
+        },
+        {
+            "id": "agent-0042",
+            "title": "documented-cancel-ack-wrong-run",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_other",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0043",
+            "title": "legacy-cancel-ack-wrong-run",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "id": "resp_other",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0044",
+            "title": "wrong-response-id-cannot-fall-back-to-requested-id",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_other",
+                "id": "resp_probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
+        },
+        {
+            "id": "agent-0045",
+            "title": "cancel-id-comparison-is-case-sensitive",
+            "since": "0.1.17",
+            "operation": "cancel",
+            "http_status": 200,
+            "body": {
+                "response_id": "resp_Probe",
+                "status": "cancelling"
+            },
+            "project_incomplete_reason": true,
+            "notes": "Cancellation-only presence and exact requested-ID rules; requested ID is resp_probe. Mismatch means uncertain cancellation state, never a safe automatic retry.",
+            "parsed": {
+                "php": {
+                    "refused": true,
+                    "error_code": null,
+                    "error_type": "invalid_response"
+                },
+                "ts": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                },
+                "py": {
+                    "refused": true,
+                    "error_code": "invalid_response",
+                    "error_type": null
+                }
+            },
+            "agrees": false,
+            "ports_agree": true,
+            "disagrees_on": [
+                "error_code",
+                "error_type"
+            ]
         }
     ]
 }
