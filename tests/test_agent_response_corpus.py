@@ -33,16 +33,19 @@ with _CORPUS_PATH.open(encoding="utf-8") as handle:
 
 
 def parse(entry: dict[str, Any]) -> dict[str, Any]:
-    """`retrieve` rather than `create`: it is the call the polling loop makes,
-    it sends no body of its own, and so each row records the PARSE and nothing
-    about the request that provoked it.
-    """
+    """Legacy rows retrieve; new rows also exercise cancel-only and create contracts."""
     client = AgentClient(
         lambda _request: HttpResponse(status=entry["http_status"], json=entry["body"])
     )
 
     try:
-        response = client.retrieve("resp_probe")
+        operation = entry.get("operation", "retrieve")
+        if operation == "cancel":
+            response = client.cancel("resp_probe")
+        elif operation == "create":
+            response = client.create("synthetic")
+        else:
+            response = client.retrieve("resp_probe")
     except PerplexityError as error:
         return {
             "refused": True,
@@ -50,7 +53,7 @@ def parse(entry: dict[str, Any]) -> dict[str, Any]:
             "error_type": error.provider_type,
         }
 
-    return {
+    parsed = {
         "refused": False,
         "id": response.id,
         "status": response.status.value,
@@ -70,6 +73,9 @@ def parse(entry: dict[str, Any]) -> dict[str, Any]:
         },
         "text": response.text(),
     }
+    if entry.get("project_incomplete_reason"):
+        parsed["incomplete_reason"] = response.incomplete_reason()
+    return parsed
 
 
 def case_of(case_id: str) -> dict[str, Any]:
@@ -77,7 +83,7 @@ def case_of(case_id: str) -> dict[str, Any]:
 
 
 def test_is_the_whole_suite_not_a_subset_someone_trimmed_to_green() -> None:
-    assert len(CORPUS["cases"]) == 17
+    assert len(CORPUS["cases"]) == 45
 
 
 @pytest.mark.parametrize("entry", CORPUS["cases"], ids=lambda e: e["id"])
