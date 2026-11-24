@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json as _json
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -113,13 +115,52 @@ class HttpResponse:
 HttpClient = Callable[[HttpRequest], HttpResponse]
 
 
+_DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def _origin(url: str) -> tuple[str, str, int | None] | None:
+    """Scheme, host and effective port; ``None`` for a url that has none."""
+    try:
+        parts = urllib.parse.urlsplit(url)
+        scheme = parts.scheme.lower()
+        port = parts.port if parts.port is not None else _DEFAULT_PORTS.get(scheme)
+    except ValueError:
+        return None
+    if not parts.hostname:
+        return None
+    return scheme, parts.hostname, port
+
+
+class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only while it stays on the request's own origin.
+
+    urllib re-sends every header a request was built with to wherever
+    ``Location`` points, ``Authorization`` included. Rather than strip a list of
+    header names, a redirect to another scheme, host or port is not followed at
+    all: the redirect itself comes back as the response. Each hop is compared
+    with the one before it, so a chain never leaves the origin it started on.
+    """
+
+    def redirect_request(
+        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> Any:
+        current = _origin(req.full_url)
+        if current is None or _origin(newurl) != current:
+            return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def urllib_transport(
     api_key: str, base_url: str = "https://api.perplexity.ai", timeout: float = 30.0
 ) -> HttpClient:
-    """A transport over the standard library, for a caller who does not want to write one."""
-    import urllib.request
+    """A transport over the standard library, for a caller who does not want to write one.
 
+    A redirect is followed only while scheme, host and port stay the same. Any
+    other redirect is not followed, and the call raises ``provider_error`` with
+    the redirect's status.
+    """
     root = base_url.rstrip("/")
+    opener = urllib.request.build_opener(_SameOriginRedirect())
 
     def send(request: HttpRequest) -> HttpResponse:
         data = None if request.body is None else _json.dumps(request.body).encode("utf-8")
@@ -134,12 +175,21 @@ def urllib_transport(
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as response:
+            with opener.open(req, timeout=timeout) as response:
                 status = int(response.status)
                 raw = response.read()
         except urllib.error.HTTPError as error:  # an error body is still a body
             status = int(error.code)
             raw = error.read()
+
+        # A redirect that reaches here was not followed. Its body is not an
+        # answer to the request, so it is never handed to the caller as one.
+        if 300 <= status < 400:
+            raise PerplexityError(
+                ErrorCode.PROVIDER_ERROR,
+                "The endpoint answered with a redirect that was not followed.",
+                status=status,
+            )
 
         # A non-JSON body is reported as None rather than raised here, so the
         # caller can raise `unreadable_response` WITH the status attached --
