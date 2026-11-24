@@ -150,6 +150,9 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
     becomes a GET without a body).
     """
 
+    # Python 3.10's handler has no 308 entry; 3.11 added this same mapping.
+    http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
+
     def redirect_request(
         self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
     ) -> Any:
