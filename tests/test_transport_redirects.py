@@ -222,3 +222,77 @@ def test_a_relative_redirect_on_a_get_is_still_followed(endpoint: Server) -> Non
         "/v1/agent/run-1",
         "/landed/v1/agent/run-1",
     ]
+
+
+@pytest.mark.parametrize("userinfo", ["u:p@", "evil.example@", "@"])
+@pytest.mark.parametrize("call", CALLS)
+def test_a_location_carrying_credentials_is_not_followed(
+    call: str, userinfo: str, endpoint: Server, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    looked_up: list[str] = []
+    original = socket.getaddrinfo
+
+    def getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
+        looked_up.append(str(host))
+        return original(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+    endpoint.redirect = (302, f"http://{userinfo}127.0.0.1:{endpoint.port}/landed")
+
+    with pytest.raises(PerplexityError) as raised:
+        _calls(endpoint)[call]()
+
+    _assert_credential_absent(raised.value)
+    assert raised.value.status == 302
+    assert "@" not in raised.value.message
+    assert len(endpoint.seen) == 1
+    assert endpoint.connections == 1
+    assert all("@" not in host for host in looked_up)
+
+
+POST_CALLS = ["search", "embeddings", "contextualized-embeddings", "agent-create"]
+
+
+@pytest.mark.parametrize("status", [307, 308])
+@pytest.mark.parametrize("call", POST_CALLS)
+def test_a_same_origin_307_or_308_on_a_post_keeps_method_body_and_headers(
+    call: str, status: int, endpoint: Server
+) -> None:
+    endpoint.redirect = (status, f"{endpoint.url}/landed")
+
+    with pytest.raises(PerplexityError):  # the landing body is an error answer
+        _calls(endpoint)[call]()
+
+    assert len(endpoint.seen) == 2
+    first, second = endpoint.seen
+    assert first[0] == "POST"
+    assert second[0] == "POST"
+    assert second[1] == "/landed"
+    assert second[3] == first[3]
+    assert second[3] != b""
+    assert second[2].get("Authorization") == f"Bearer {KEY}"
+    assert second[2].get("Content-Type") == "application/json"
+    assert second[2].get("Content-Length") == str(len(first[3]))
+
+
+def test_a_same_origin_307_on_a_post_returns_the_landed_answer(endpoint: Server) -> None:
+    endpoint.redirect = (307, f"{endpoint.url}/landed/search")
+    endpoint.landed = {"results": [{"url": "https://example.test"}]}
+
+    http = urllib_transport(KEY, base_url=endpoint.url, timeout=5.0)
+
+    assert search(http, "prism") == [{"url": "https://example.test"}]
+    assert [(method, path) for method, path, _, _ in endpoint.seen] == [
+        ("POST", "/search"),
+        ("POST", "/landed/search"),
+    ]
+
+
+def test_a_same_origin_307_loop_on_a_post_is_bounded(endpoint: Server) -> None:
+    endpoint.redirect = (307, f"{endpoint.url}/again")
+
+    with pytest.raises(PerplexityError) as raised:
+        _calls(endpoint)["search"]()
+
+    assert raised.value.status == 307
+    assert len(endpoint.seen) <= 11
