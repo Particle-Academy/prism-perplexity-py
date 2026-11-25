@@ -139,7 +139,19 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
     header names, a redirect to another scheme, host or port is not followed at
     all: the redirect itself comes back as the response. Each hop is compared
     with the one before it, so a chain never leaves the origin it started on.
+
+    A ``Location`` carrying a user name or password is not followed either: it
+    is the server choosing as whom to connect, and urllib would read it as part
+    of the host name.
+
+    A same-origin 307 or 308 keeps the method, body and headers, as the
+    TypeScript port does; urllib on its own refuses those on a POST. Any other
+    redirect is rewritten as urllib does (a 303, or a 301/302 on a POST,
+    becomes a GET without a body).
     """
+
+    # Python 3.10's handler has no 308 entry; 3.11 added this same mapping.
+    http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
 
     def redirect_request(
         self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
@@ -147,6 +159,17 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
         current = _origin(req.full_url)
         if current is None or _origin(newurl) != current:
             return None
+        if "@" in urllib.parse.urlsplit(newurl).netloc:
+            return None
+        if code in (307, 308):
+            return urllib.request.Request(
+                newurl,
+                data=req.data,
+                headers=dict(req.headers),
+                origin_req_host=req.origin_req_host,
+                unverifiable=True,
+                method=req.get_method(),
+            )
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
@@ -155,9 +178,10 @@ def urllib_transport(
 ) -> HttpClient:
     """A transport over the standard library, for a caller who does not want to write one.
 
-    A redirect is followed only while scheme, host and port stay the same. Any
-    other redirect is not followed, and the call raises ``provider_error`` with
-    the redirect's status.
+    A redirect is followed only while scheme, host and port stay the same, and
+    only to a ``Location`` with no user name or password. Any other redirect is
+    not followed, and the call raises ``provider_error`` with the redirect's
+    status. A same-origin 307 or 308 keeps the method and body.
     """
     root = base_url.rstrip("/")
     opener = urllib.request.build_opener(_SameOriginRedirect())
