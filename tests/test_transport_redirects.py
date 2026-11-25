@@ -295,4 +295,22 @@ def test_a_same_origin_307_loop_on_a_post_is_bounded(endpoint: Server) -> None:
         _calls(endpoint)["search"]()
 
     assert raised.value.status == 307
-    assert len(endpoint.seen) <= 11
+    # urllib follows the same url at most four times (max_repeats): the first
+    # request plus four to /again, and no more.
+    assert len(endpoint.seen) == 5
+
+
+@pytest.mark.parametrize("code", [302, 307])
+def test_a_same_origin_chain_of_distinct_paths_is_bounded(endpoint: Server, code: int) -> None:
+    # A relative "x/" resolves one level deeper each hop, so no url repeats.
+    endpoint.redirect = (code, "x/")
+
+    with pytest.raises(PerplexityError) as raised:
+        _calls(endpoint)["search"]()
+
+    assert raised.value.status == code
+    # urllib follows at most ten redirects (max_redirections): the first
+    # request plus ten, every path distinct.
+    paths = [path for _, path, _, _ in endpoint.seen]
+    assert len(paths) == 11
+    assert len(set(paths)) == 11
