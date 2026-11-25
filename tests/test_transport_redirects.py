@@ -56,6 +56,8 @@ class Server:
     def __init__(self, host: str = "127.0.0.1") -> None:
         self.seen: list[tuple[str, str, dict[str, str], bytes]] = []
         self.redirect: tuple[int, str] | None = None
+        # Per-path redirects, for chains whose Location depends on the path.
+        self.route: Callable[[str], tuple[int, str] | None] | None = None
         self.landed: Any = {"error": {"message": "landed", "type": "landed"}}
         outer = self
 
@@ -64,8 +66,15 @@ class Server:
                 length = int(self.headers.get("Content-Length") or 0)
                 body = self.rfile.read(length) if length else b""
                 outer.seen.append((self.command, self.path, dict(self.headers.items()), body))
-                if outer.redirect is not None and not self.path.startswith("/landed"):
-                    status, location = outer.redirect
+                hop = outer.route(self.path) if outer.route is not None else None
+                if (
+                    hop is None
+                    and outer.redirect is not None
+                    and not self.path.startswith("/landed")
+                ):
+                    hop = outer.redirect
+                if hop is not None:
+                    status, location = hop
                     self.send_response(status)
                     self.send_header("Location", location)
                     self.send_header("Content-Type", "application/json")
@@ -309,8 +318,116 @@ def test_a_same_origin_chain_of_distinct_paths_is_bounded(endpoint: Server, code
         _calls(endpoint)["search"]()
 
     assert raised.value.status == code
-    # urllib follows at most ten redirects (max_redirections): the first
-    # request plus ten, every path distinct.
+    # At most ten redirects are followed: the first request plus ten, every
+    # path distinct.
     paths = [path for _, path, _, _ in endpoint.seen]
     assert len(paths) == 11
     assert len(set(paths)) == 11
+
+
+def _cycle(length: int, code: int) -> Callable[[str], tuple[int, str] | None]:
+    """Any first path goes to /c0; /c0 .. /c<length-1> then go round for ever."""
+
+    def route(path: str) -> tuple[int, str] | None:
+        if path.startswith("/c"):
+            return code, f"/c{(int(path[2:]) + 1) % length}"
+        return code, "/c0"
+
+    return route
+
+
+def _chain(hops: int, code: int) -> Callable[[str], tuple[int, str] | None]:
+    """Exactly ``hops`` redirects through distinct paths, then a 200 at /landed."""
+
+    def route(path: str) -> tuple[int, str] | None:
+        if path.startswith("/landed"):
+            return None
+        step = int(path[3:]) if path.startswith("/h/") else 0
+        return code, ("/landed/done" if step + 1 >= hops else f"/h/{step + 1}")
+
+    return route
+
+
+# urllib's own limits count DISTINCT urls (ten) and repeats of one url (four),
+# so on their own a chain cycling through a few urls is followed up to four
+# times per url. The transport counts hops: ten followed, whatever the urls.
+@pytest.mark.parametrize("length", [3, 9])
+@pytest.mark.parametrize("code", [302, 307])
+@pytest.mark.parametrize("call", ["search", "agent-retrieve"])
+def test_a_cycling_same_origin_chain_follows_at_most_ten_redirects(
+    endpoint: Server, call: str, code: int, length: int
+) -> None:
+    endpoint.route = _cycle(length, code)
+
+    with pytest.raises(PerplexityError) as raised:
+        _calls(endpoint)[call]()
+
+    assert raised.value.status == code
+    _assert_credential_absent(raised.value)
+    # The first request plus ten followed redirects; the eleventh is refused.
+    assert len(endpoint.seen) == 11
+
+
+@pytest.mark.parametrize("code", [302, 307])
+def test_a_chain_of_exactly_ten_redirects_lands(endpoint: Server, code: int) -> None:
+    endpoint.route = _chain(10, code)
+    endpoint.landed = {"results": [{"url": "https://example.test"}]}
+
+    http = urllib_transport(KEY, base_url=endpoint.url, timeout=5.0)
+
+    assert search(http, "prism") == [{"url": "https://example.test"}]
+    assert len(endpoint.seen) == 11
+    assert endpoint.seen[-1][1] == "/landed/done"
+
+
+@pytest.mark.parametrize("code", [302, 307])
+def test_a_chain_of_eleven_redirects_is_refused(endpoint: Server, code: int) -> None:
+    endpoint.route = _chain(11, code)
+
+    with pytest.raises(PerplexityError) as raised:
+        _calls(endpoint)["search"]()
+
+    assert raised.value.status == code
+    assert len(endpoint.seen) == 11
+    assert all(not path.startswith("/landed") for _, path, _, _ in endpoint.seen)
+
+
+def test_each_call_on_one_transport_gets_its_own_ten_redirects(endpoint: Server) -> None:
+    http = urllib_transport(KEY, base_url=endpoint.url, timeout=5.0)
+    endpoint.landed = {"results": []}
+
+    endpoint.route = _cycle(9, 307)
+    for _ in range(2):
+        endpoint.seen.clear()
+        with pytest.raises(PerplexityError):
+            search(http, "prism")
+        assert len(endpoint.seen) == 11
+
+    # A budget spent by the calls above does not shorten the next one.
+    endpoint.route = _chain(10, 307)
+    for _ in range(2):
+        endpoint.seen.clear()
+        assert search(http, "prism") == []
+        assert len(endpoint.seen) == 11
+
+
+def test_concurrent_calls_on_one_transport_do_not_share_a_budget(endpoint: Server) -> None:
+    http = urllib_transport(KEY, base_url=endpoint.url, timeout=5.0)
+    endpoint.route = _chain(10, 302)
+    endpoint.landed = {"results": []}
+    outcomes: list[object] = []
+
+    def run() -> None:
+        try:
+            outcomes.append(search(http, "prism"))
+        except PerplexityError as error:
+            outcomes.append(error)
+
+    threads = [Thread(target=run) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert outcomes == [[], []]
+    assert len(endpoint.seen) == 22
