@@ -31,6 +31,14 @@ print(done.text())
 callable that takes an `HttpRequest` (`method`, `path`, `body`) and returns an
 `HttpResponse` (`status`, `json`) works in its place, so tests need no network.
 
+`urllib_transport()` follows a redirect only while scheme, host and port stay
+the same, and never to a `Location` carrying a user name or password; any other
+redirect raises `PerplexityError` with code `provider_error` and the redirect's
+status. A same-origin redirect re-sends `Authorization` and, for a 307 or 308,
+the method and body. At most ten redirects are followed, and the same url at
+most four times. Proxies from `HTTP_PROXY` / `HTTPS_PROXY` apply, as with
+`urlopen`.
+
 ## Search
 
 `search(http, query, options)` returns web results with no model call: the
