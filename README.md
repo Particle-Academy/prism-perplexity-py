@@ -35,8 +35,10 @@ callable that takes an `HttpRequest` (`method`, `path`, `body`) and returns an
 the same, and never to a `Location` carrying a user name or password; any other
 redirect raises `PerplexityError` with code `provider_error` and the redirect's
 status. A same-origin redirect re-sends `Authorization` and, for a 307 or 308,
-the method and body. At most ten redirects are followed, and the same url at
-most four times. Proxies from `HTTP_PROXY` / `HTTPS_PROXY` apply, as with
+the method and body. At most ten redirects are followed per call, counted as
+hops (a chain that cycles through the same urls counts every visit), and the
+same url at most four times; the next redirect raises `provider_error` with its
+status. Proxies from `HTTP_PROXY` / `HTTPS_PROXY` apply, as with
 `urlopen`.
 
 ## Search

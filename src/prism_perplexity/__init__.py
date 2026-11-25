@@ -148,7 +148,16 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
     TypeScript port does; urllib on its own refuses those on a POST. Any other
     redirect is rewritten as urllib does (a 303, or a 301/302 on a POST,
     becomes a GET without a body).
+
+    At most ``max_hops`` redirects are followed per call. urllib's own limits
+    count DISTINCT urls (``max_redirections``) and repeats of one url
+    (``max_repeats``), so a chain cycling through a few urls would otherwise be
+    followed up to four times per url. The count travels on the request chain
+    itself, so calls sharing one opener, sequentially or from other threads,
+    never share a budget.
     """
+
+    max_hops = 10
 
     # Python 3.10's handler has no 308 entry; 3.11 added this same mapping.
     http_error_308 = urllib.request.HTTPRedirectHandler.http_error_302
@@ -156,13 +165,17 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(
         self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
     ) -> Any:
+        hops = getattr(req, "_prism_redirect_hops", 0)
+        if not isinstance(hops, int) or hops >= self.max_hops:
+            return None
         current = _origin(req.full_url)
         if current is None or _origin(newurl) != current:
             return None
         if "@" in urllib.parse.urlsplit(newurl).netloc:
             return None
+        new: Any
         if code in (307, 308):
-            return urllib.request.Request(
+            new = urllib.request.Request(
                 newurl,
                 data=req.data,
                 headers=dict(req.headers),
@@ -170,7 +183,11 @@ class _SameOriginRedirect(urllib.request.HTTPRedirectHandler):
                 unverifiable=True,
                 method=req.get_method(),
             )
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        else:
+            new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new is not None:
+            new._prism_redirect_hops = hops + 1
+        return new
 
 
 def urllib_transport(
@@ -181,7 +198,8 @@ def urllib_transport(
     A redirect is followed only while scheme, host and port stay the same, and
     only to a ``Location`` with no user name or password. Any other redirect is
     not followed, and the call raises ``provider_error`` with the redirect's
-    status. A same-origin 307 or 308 keeps the method and body.
+    status. A same-origin 307 or 308 keeps the method and body. At most ten
+    redirects are followed per call; the eleventh is refused the same way.
     """
     root = base_url.rstrip("/")
     opener = urllib.request.build_opener(_SameOriginRedirect())

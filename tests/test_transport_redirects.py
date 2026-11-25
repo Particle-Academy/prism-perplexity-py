@@ -67,7 +67,11 @@ class Server:
                 body = self.rfile.read(length) if length else b""
                 outer.seen.append((self.command, self.path, dict(self.headers.items()), body))
                 hop = outer.route(self.path) if outer.route is not None else None
-                if hop is None and outer.redirect is not None and not self.path.startswith("/landed"):
+                if (
+                    hop is None
+                    and outer.redirect is not None
+                    and not self.path.startswith("/landed")
+                ):
                     hop = outer.redirect
                 if hop is not None:
                     status, location = hop
